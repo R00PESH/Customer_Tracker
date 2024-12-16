@@ -1,0 +1,121 @@
+package com.tap.app;
+
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
+import org.hibernate.cfg.Configuration;
+
+import com.tap.model.Customer;
+import com.tap.model.CustomerDetails;
+import com.tap.model.Orders;
+
+public class Program {
+    private static SessionFactory sessionFactory = null;
+    private static Session session = null;
+
+    public static void main(String[] args) {
+        try {
+            // Create SessionFactory used to create session objects
+            sessionFactory = new Configuration().configure().addAnnotatedClass(Customer.class)
+                    .addAnnotatedClass(CustomerDetails.class)
+                    .addAnnotatedClass(Orders.class).buildSessionFactory();
+
+            // Create session to make physical connection to database
+            session = sessionFactory.openSession();
+
+            // Transaction to commit operations in the database
+            Transaction transaction = session.beginTransaction();
+
+            // CRUD Operations
+            createCustomer(transaction);
+            readCustomer(transaction);
+            updateCustomer(transaction);
+            deleteCustomer(transaction);
+
+            // Commit the transaction
+            transaction.commit();
+        } finally {
+            session.close();
+            sessionFactory.close();
+        }
+    }
+
+    // CREATE Operation
+    private static void createCustomer(Transaction transaction) {
+        System.out.println("Creating new customer...");
+
+        // Create Customer
+        Customer customer = new Customer();
+        customer.setFirstName("John");
+        customer.setLastName("Doe");
+
+        // Create CustomerDetails
+        CustomerDetails customerDetails = new CustomerDetails();
+        customerDetails.setAddress("123 Main St");
+        customerDetails.setPhone("123-456-7890");
+        customerDetails.setEmail("john.doe@example.com");
+        customerDetails.setCustomer(customer);
+
+        // Link CustomerDetails with Customer
+        customer.setCustomerDetails(customerDetails);
+
+        // Save the customer object
+        session.save(customer);
+        System.out.println("Customer created: " + customer);
+    }
+
+    // READ Operation
+    private static void readCustomer(Transaction transaction) {
+        System.out.println("\nReading customer details...");
+
+        // Retrieve customer by ID
+        int customerId = 1; // Sample ID
+        Customer customer = session.get(Customer.class, customerId);
+
+        if (customer != null) {
+            System.out.println("Found customer: " + customer);
+            System.out.println("Customer details: " + customer.getCustomerDetails());
+        } else {
+            System.out.println("Customer not found!");
+        }
+    }
+
+    // UPDATE Operation
+    private static void updateCustomer(Transaction transaction) {
+        System.out.println("\nUpdating customer...");
+
+        // Retrieve the customer object by ID
+        int customerId = 1; // Sample ID
+        Customer customer = session.get(Customer.class, customerId);
+
+        if (customer != null) {
+            // Modify customer information
+            System.out.println("Updating customer: " + customer);
+            customer.setFirstName("UpdatedFirstName");
+            customer.setLastName("UpdatedLastName");
+
+            // The update happens automatically on commit due to Hibernate's dirty checking
+            System.out.println("Customer updated to: " + customer);
+        } else {
+            System.out.println("Customer not found!");
+        }
+    }
+
+    // DELETE Operation
+    private static void deleteCustomer(Transaction transaction) {
+        System.out.println("\nDeleting customer...");
+
+        // Retrieve customer by ID
+        int customerId = 1; // Sample ID
+        Customer customer = session.get(Customer.class, customerId);
+
+        if (customer != null) {
+            // Delete the customer object
+            session.delete(customer);
+            System.out.println("Customer deleted: " + customer);
+        } else {
+            System.out.println("Customer not found!");
+        }
+    }
+}
+
